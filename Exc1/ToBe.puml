@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(admin, "Администратор", "Управление доступом и мониторинг")
+Person(user, "Бизнес-пользователь", "Создание отчетов через портал")
+
+System_Boundary(c1, "'Будущее 2.0' Архитектура через год") {
+    Container(portal, "Портал самообслуживания", "React/Node.js", "Интерфейс для отчетов и управления данными")
+    Container(bi, "BI-система", "Tableau", "Визуализация и анализ")
+    
+    Container(data_lakehouse, "Data Lakehouse", "Delta Lake + Spark", "Единое хранилище:\n- Сырые данные (логи, снимки)\n- Структурированные данные\n- Агрегаты для аналитики")
+    
+    Container(ai_services, "ИИ-сервисы", "Python", "Анализ медицинских снимков")
+    Container(fintech, "Финтех-сервисы", "Go/Java", "Транзакции, кредиты и счета")
+    Container(integration, "Брокер сообщений", "Kafka", "Потоковая передача событий и данных")
+    Container(internal, "Внутренние сервисы", "Go/Java", "Управление клиниками и персоналом")
+}
+
+Rel(user, portal, "Создание отчетов", "HTTPS")
+Rel(portal, bi, "Запрос визуализаций", "HTTPS REST API")
+Rel(bi, data_lakehouse, "Аналитические запросы")
+
+Rel(ai_services, data_lakehouse, "Чтение медицинских данных")
+Rel(ai_services, integration, "События диагностики")
+Rel(ai_services, data_lakehouse, "Сохранение результатов")
+
+Rel(fintech, integration, "Финансовые транзакции")
+Rel(internal, integration, "Операционные данные")
+
+Rel(integration, data_lakehouse, "Потоковая передача данных")
+Rel(data_lakehouse, fintech, "Финансовые метрики")
+
+Rel(admin, data_lakehouse, "Управление доступом")
+Rel(admin, portal, "Настройка прав", "HTTPS")
+
+@enduml
