@@ -1,0 +1,58 @@
+@startuml
+!include <C4/C4_Context>
+
+title Диаграмма потоков данных между доменами
+
+' ---------- Домены ----------
+System_Boundary(domain_health, "Медицина") {
+    System(ai_services, "ИИ-сервисы", "Обработка медицинских данных")
+    System(legacy_dwh, "Легаси DWH", "Хранение медицинских архивов")
+}
+
+System_Boundary(domain_fontech, "Финансы/финтех") {
+    System(fintech_services, "Финтех-сервисы", "Кредиты, счета, транзакции и т.д.")
+    System(fintech_services_data_mart, "Финансовые витрины", "Агрегированные данные")
+}
+
+System_Boundary(domain_analytics, "Аналитика") {
+    System(data_mart, "Витрина данных", "Разрешенные для аналитики данные")
+    System(modern_dwh, "Обновленный DWH", "Структурированные данные")
+    System(bi, "BI-система", "Генерация отчетов")
+}
+
+System_Boundary(integration_domain, "Интеграционный домен") {
+    System(kafka, "Шина данных", "Асинхронная коммуникация")
+}
+
+System_Boundary(domain_management, "Управление") {
+    System(portal, "Портал самообслуживания", "Создание отчетов")
+    System(internal_services, "Внутренние сервисы", "Управление клиниками")
+}
+
+' ---------- Потоки данных ----------
+
+' Медицинский домен
+Rel(ai_services, legacy_dwh, "Чтение медицинских данных")
+Rel(ai_services, kafka, "Отправка результатов анализа")
+Rel(legacy_dwh, modern_dwh, "Миграция не медицинских данных", "Batch-ETL")
+
+' Финансовый домен
+Rel(fintech_services, kafka, "Публикация транзакций")
+Rel(fintech_services, fintech_services_data_mart, "Синхронизация данных", "API")
+Rel(fintech_services_data_mart, data_mart, "Агрегация финансовых метрик", "ELT")
+
+' Аналитический домен
+Rel(modern_dwh, data_mart, "Наполнение витрины", "ETL-процессы")
+Rel(data_mart, bi, "Запросы для отчетов")
+Rel(bi, portal, "Экспорт визуализаций", "API/HTTP")
+
+' Интеграционный домен
+Rel(kafka, data_mart, "Обогащение данных событиями")
+Rel(kafka, modern_dwh, "Синхронизация событий", "CDC")
+
+' Операционный домен
+Rel(internal_services, kafka, "Управляющие события")
+Rel(portal, data_mart, "Запрос данных для отчетов", "SQL/API")
+Rel(portal, bi, "Запуск аналитических задач", "REST")
+
+@enduml

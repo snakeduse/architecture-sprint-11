@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(admin, "Администратор", "Управляет системой и настройками доступа")
+Person(user, "Бизнес-пользователь", "Создает отчеты через портал самообслуживания")
+
+System_Boundary(c1, "Архитектура через год") {
+    Container(portal, "Портал самообслуживания", "React/Node.js", "Предоставляет интерфейс для создания отчетов, управления доступом и визуализации данных")
+    Container(bi, "BI-система", "Tableau", "Аналитика и дашборды")
+    Container(data_mart, "Витрина данных", "BigQuery (Облачное хранилище)", "Агрегированные данные для отчетов")
+    Container(modern_dwh, "Обновленный DWH", "Snowflake (Облачное решение)", "Основное хранилище структурированных данных")
+    Container(legacy_dwh, "Старый DWH", "SQL Server 2008", "Временное хранение медицинских данных")
+    Container(ai_services, "ИИ-сервисы", "Python", "Обработка медицинских данных")
+    Container(fintech_services, "Финтех-сервисы", "Go/Java", "Кредиты, счета, транзакции и т.д.")
+    Container(kafka, "Шина данных", "Kafka", "Брокер сообщений для асинхронная коммуникации между сервисами")
+    Container(internal_services, "Внутренние сервисы", "Go/Java", "Управление клиниками, финансами, персоналом и т.д.")
+    Container(data_lake, "Data Lake", "MinIO + Apache Iceberg", "Хранение сырых данных (логи, снимки, файлы и т.д.)")
+}
+
+Rel(user, portal, "Создает отчеты", "HTTPS")
+Rel(portal, data_mart, "Запрашивает данные", "SQL/API")
+Rel(portal, bi, "Экспорт данных для визуализации")
+Rel(data_mart, modern_dwh, "Синхронизация данных", "ETL-процессы")
+Rel(data_mart, fintech_services, "Финансовые метрики", "HTTPS REST API")
+Rel(modern_dwh, legacy_dwh, "Миграция данных", "Batch-обработка")
+Rel(modern_dwh, kafka, "Публикация событий")
+Rel(ai_services, kafka, "Чтение/запись медицинских данных")
+Rel(fintech_services, kafka, "Финансовые транзакции")
+Rel(internal_services, kafka, "Управляющие события")
+Rel(ai_services, legacy_dwh, "Доступ к медицинским архивам", "SQL (ограниченный доступ)")
+Rel(admin, portal, "Настройка прав доступа", "HTTPS (Панель администратора)")
+
+Rel(kafka, data_lake, "Сырые данные из событий")
+Rel(internal_services, data_lake, "Загрузка операционных данных")
+Rel(data_lake, modern_dwh, "Обработка данных", "ETL-процессы")
+Rel(data_lake, ai_services, "Доступ к сырым данным")
+Rel(ai_services, data_lake, "Сохранение результатов")
+
+@enduml
