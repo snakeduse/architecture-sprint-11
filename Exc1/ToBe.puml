@@ -14,6 +14,7 @@ System_Boundary(c1, "Архитектура через год") {
     Container(fintech_services, "Финтех-сервисы", "Go/Java", "Кредиты, счета, транзакции и т.д.")
     Container(kafka, "Шина данных", "Kafka", "Брокер сообщений для асинхронная коммуникации между сервисами")
     Container(internal_services, "Внутренние сервисы", "Go/Java", "Управление клиниками, финансами, персоналом и т.д.")
+    Container(data_lake, "Data Lake", "MinIO + Apache Iceberg", "Хранение сырых данных (логи, снимки, файлы и т.д.)")
 }
 
 Rel(user, portal, "Создает отчеты", "HTTPS")
@@ -28,5 +29,11 @@ Rel(fintech_services, kafka, "Финансовые транзакции")
 Rel(internal_services, kafka, "Управляющие события")
 Rel(ai_services, legacy_dwh, "Доступ к медицинским архивам", "SQL (ограниченный доступ)")
 Rel(admin, portal, "Настройка прав доступа", "HTTPS (Панель администратора)")
+
+Rel(kafka, data_lake, "Сырые данные из событий")
+Rel(internal_services, data_lake, "Загрузка операционных данных")
+Rel(data_lake, modern_dwh, "Обработка данных", "ETL-процессы")
+Rel(data_lake, ai_services, "Доступ к сырым данным")
+Rel(ai_services, data_lake, "Сохранение результатов")
 
 @enduml
